@@ -1,0 +1,46 @@
+name: "Upliftr E2E"
+description: "Run Upliftr AI-native end-to-end suites and gate the PR on the result."
+author: "Upliftr"
+branding:
+  icon: "alert-triangle"
+  color: "red"
+
+# Self-contained: runs on the public Upliftr image (Chromium + engine baked in),
+# so it needs no source checkout and works in any repo. Inputs arrive as INPUT_*
+# env vars (read in the script, never interpolated, so a crafted value can't
+# break out of the command).
+inputs:
+  suite:
+    description: "Path or glob of *.upliftr.yaml suites to run."
+    required: false
+    default: "suites/*.upliftr.yaml"
+  file-issues:
+    description: "Tracker to file failures into (e.g. 'github'), or '' to disable."
+    required: false
+    default: ""
+  anthropic-api-key:
+    description: "Anthropic API key — the LLM that drives the browser. Pass secrets.ANTHROPIC_API_KEY."
+    required: true
+  out:
+    description: "Directory for report.json / junit.xml / report.html."
+    required: false
+    default: "upliftr-artifacts"
+
+runs:
+  using: "docker"
+  image: "docker://registry.gitlab.com/upliftr/app/upliftr-api:latest"
+  entrypoint: "bash"
+  args:
+    - "-ec"
+    - |
+      export ANTHROPIC_API_KEY="${INPUT_ANTHROPIC_API_KEY}"
+      # Issue filing (file-issues: github) reads these; GITHUB_REPOSITORY is auto,
+      # GITHUB_TOKEN must be passed by the caller's `env:` (see the example).
+      export GITHUB_REPO="${GITHUB_REPO:-$GITHUB_REPOSITORY}"
+      export GIT_SHA="${GIT_SHA:-$GITHUB_SHA}"
+      export CI_RUN_URL="${CI_RUN_URL:-$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID}"
+      ARGS=()
+      case "${INPUT_FILE_ISSUES:-}" in ""|none|false) : ;; *) ARGS=(--file-issues "${INPUT_FILE_ISSUES}") ;; esac
+      cd "${GITHUB_WORKSPACE}"
+      # Exit code is the gate: 0 pass · 1 failed · 2 broken · 3 error.
+      python -m app.cli run "${INPUT_SUITE}" "${ARGS[@]}" --out "${INPUT_OUT}"
