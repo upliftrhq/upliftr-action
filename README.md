@@ -33,4 +33,4 @@ Set **`ANTHROPIC_API_KEY`** as a repo secret. The exit code gates the PR
 | `anthropic-api-key` | *(required)* | The Anthropic key. |
 | `out` | `upliftr-artifacts` | Report directory. |
 
-Source & docs: <https://gitlab.com/upliftr/upliftr> · <https://docs.upliftr.io/guide/ci>
+Source & docs: <https://github.com/upliftrhq/upliftr> · <https://docs.upliftr.io/guide/ci>

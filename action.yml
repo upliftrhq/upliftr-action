@@ -28,7 +28,7 @@ inputs:
 
 runs:
   using: "docker"
-  image: "docker://registry.gitlab.com/upliftr/app/upliftr-api:latest"
+  image: "docker://ghcr.io/upliftrhq/upliftr-api:latest"
   entrypoint: "bash"
   args:
     - "-ec"
